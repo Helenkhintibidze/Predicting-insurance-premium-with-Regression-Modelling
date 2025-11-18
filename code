@@ -1,0 +1,121 @@
+getwd()
+list.files()
+str(insurance)
+install.packages("GGally")
+install.packages("psych")
+install.packages("ggiraph")
+install.packages("ggiraphExtra")
+install.packages("plyr")
+install.packages("dplyr")
+library(ggplot2)
+library(GGally)
+library(psych)
+library(ggiraph)
+library(ggiraphExtra)
+library(plyr)
+library(dplyr)
+
+#Distribution of the dependent variable (Insurance charges):
+
+summary(insurance$charges)
+#Median value is quite less than mean value implying right skew in distribution of insurance expenses. A histogram would be beneficial in further exploration
+
+ggplot(insurance,aes(x=charges, fill=cut(x=charges,100)))+
+  geom_histogram(show.legend = FALSE)+
+  scale_fill_discrete( h =c(240,10), c=120,l=70)+
+  theme_minimal()+
+  labs(x="insurance charges", y="frequency")+
+  ggtitle("Histogram of Insurance Charges")
+
+#We see that most clients pay insurance charges of less than USD 25000 while very few pay beyond USD 50000   
+
+#Exploring categorical variables
+insurance$sex <- as.factor(insurance$sex)
+insurance$smoker <- as.factor(insurance$smoker)
+insurance$region <- as.factor(insurance$region)
+insurance$
+
+ 
+var_factors <- names(Filter(is.factor, insurance))
+insurance <- read.csv("insurance.csv", stringsAsFactors = TRUE)
+Factors <- names(Filter(is.factor,insurance))
+
+sex_counts <- as.data.frame(table(insurance["sex"]))
+
+ggplot(sex_counts,aes(x= sex, y=Freq, fill= sex)) +
+  geom_bar(stat = "identity")+ 
+  theme_minimal() +
+  labs(x = "Sex", y = "Count (Frequency)", fill = "Sex") +
+  ggtitle("Distribution of Insurance Policy Holders by Sex") 
+
+smoker_counts<- as.data.frame(table(insurance["smoker"]))
+ggplot(smoker_counts, aes( x=smoker,y=Freq,fill=smoker))+ 
+  geom_bar(stat="identity")+
+  theme_minimal()+
+  labs(x="", y="Count(Frequency)",fill="smoker")+
+  ggtitle("Distribution of Insurance Policy Holders by smoker")
+
+region_counts <- as.data.frame(table(insurance["region"]))
+ggplot(region_counts,aes(x=region, y=Freq, fill=region))+
+  geom_bar(stat = "identity")+
+  theme_minimal()+
+  labs(x="",y="Count(frequency)",fill="region")+
+  ggtitle("Distribution of Insucrance Policy Holder by Region")
+
+library(magick)
+library(gtools) 
+
+getwd()
+setwd("C:/Users/elene/Desktop/Helen's R projects/health")
+
+print(plot_files)
+print(list.files(pattern = "\\.png$"))
+print(list.files())
+all_image_files <- list.files(pattern = "\\.png$")
+plot_files_dashboard <- c(
+  "D 0f region.png",        
+  "d of smoker.png",         
+  "Distribution by sex.png"
+   )
+image_list <- lapply(plot_files_dashboard, image_read)
+multi_frame_image <- do.call(c, image_list)   
+dashboard_montage <- multi_frame_image %>% 
+  image_montage(
+    tile = "3x",                    # Use 3 columns for larger plots (adjust if needed)
+    geometry = "600x400+10+10"      # Increased size for better readability
+  )
+image_write(dashboard_montage, path = "Final_Combined_Dashboard.jpg", format = "jpeg")
+
+
+
+#Exploring correlation between the variables 
+
+cor(insurance[c("age","bmi","children","charges")])
+pairs(insurance[c("age","bmi","children","charges")])
+library(panels)
+install.packages("panels")
+
+pairs.panels(insurance[c("age", "bmi","children", "charges")])
+
+
+#Train a regression model on the insurance data: 
+
+insurance_model <- lm(data=insurance,formula = charges ~ age + sex + bmi + children + smoker + region)
+insurance_model
+summary(insurance_model)
+ggiraphExtra::ggEffect(insurance_model,interactive=TRUE)
+
+
+#Transforming BMI to categorical value (high/ low):
+
+insurance$bmi30 <- ifelse(insurance$bmi>30,1,0)
+
+#Interactive effects of smoking and obesity: 
+insurance_model_updated <- lm(charges ~ age + children + bmi + sex + bmi30 + bmi30*smoker + region,
+                              data = insurance)
+summary(insurance_model_updated)
+
+
+insurance %>% mutate(Smoking = ifelse(smoker=="yes", 1, 0)) %>%
+  select(age,bmi,bmi30,children,Smoking,charges) %>%
+  ggcorr(label=TRUE, name="Correlation")
